@@ -39,4 +39,30 @@ func Timing(do func(), stop chan bool, interval time.Duration, utcOffset time.Du
 	TimingAtClock(do, stop, interval, utcOffset, 0)
 }
 
+//New 新建Timer
+func New(interval,localeClock,timeZoneOffset time.Duration) *Timer {
+	output := make(chan bool, 10)
+	stop := make(chan bool, 0)
+	go TimingAtClock(func(){
+		output<-true
+	},stop,interval,localeClock,timeZoneOffset)
+	return &Timer{output:output,stop:stop}
+}
+
+//Timer 计时器
+type Timer struct{
+	output chan bool
+	stop chan bool
+}
+
+//Stop 停止计时器
+func (t Timer) Stop() {
+	close(t.stop)
+	close(t.output)
+}
+
+//Signal 给予定时信号
+func (t Timer) Signal() chan bool {
+	return t.output
+}
 
