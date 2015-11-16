@@ -1,10 +1,12 @@
-package timing
+package timing_test
 
 import (
 	"fmt"
 	"math"
 	"testing"
 	"time"
+"github.com/bxy09/timing"
+	"github.com/Sirupsen/logrus"
 )
 
 const BJ_TZ time.Duration = time.Hour*8
@@ -16,7 +18,7 @@ func TestTiming(t *testing.T) {
 	hour, min, second := start.Clock()
 	const offset int = 7
 	fmt.Println(start, hour, min, second)
-	go TimingAtClock(func() {
+	go timing.TimingAtClock(func() {
 		t.Log(time.Now())
 		current := time.Now()
 		if math.Abs(current.Sub(start).Seconds() - float64(offset)) > 2 {
@@ -42,7 +44,7 @@ func TestSecond(t *testing.T) {
 	var last time.Time
 
 	stop := make(chan bool, 1)
-	go Timing(func() {
+	go timing.Timing(func() {
 		t.Log(time.Now())
 		if times == 0 {
 			last = time.Now()
@@ -59,7 +61,17 @@ func TestSecond(t *testing.T) {
 		}
 	}, stop, time.Second, 0)
 	<-stop
+}
 
-	//go TimingAtClock(func() {
-	//}, stop, time.Hour*24)
+func TestSecondInClass(t *testing.T) {
+	t.Log("In TestSecondInClass")
+	logrus.SetLevel(logrus.DebugLevel)
+	timer := timing.New(time.Second, 0, time.Hour*8)
+	limit := 8
+	for <-timer.Signal() {
+		limit--
+		if limit == 0 {
+			timer.Stop()
+		}
+	}
 }

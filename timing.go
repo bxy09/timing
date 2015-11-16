@@ -2,16 +2,18 @@ package timing
 
 import (
 	"time"
+	"github.com/Sirupsen/logrus"
 )
 
 //running timely with offset and timezone, stop by stop channel
 func TimingAtClock(do func(), stop chan bool, interval, localeClock, timeZoneOffset time.Duration) {
 	now := time.Now()
-	offset := localeClock-timeZoneOffset%(time.Hour*24)
+	offset := (localeClock-timeZoneOffset%(time.Hour*24))%interval
 	next := now.Truncate(interval).Add(offset)
 	if next.Before(now) {
 		next = next.Add(interval)
 	}
+	logrus.Debug("Timing At Clock next:",next)
 	timer := time.NewTimer(next.Sub(now))
 	stopped := false
 	for {
@@ -30,6 +32,7 @@ func TimingAtClock(do func(), stop chan bool, interval, localeClock, timeZoneOff
 		if next.Before(now) {
 			next = next.Add(interval)
 		}
+		logrus.Debug("Timing At Clock next:",next)
 		timer.Reset(next.Sub(now))
 	}
 }
